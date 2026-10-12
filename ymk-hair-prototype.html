@@ -473,7 +473,7 @@ function startProc(key,res){
 /* ===== Growth: tutorial + drawing ===== */
 function showGrowthTut(){
   var strands='';[[95,18,70,16,6,0],[120,12,76,18,7,.5],[145,16,66,16,6,1]].forEach(function(a){strands+='<path d="'+strandPath.apply(null,a)+'" fill="rgba(238,61,120,.6)"/>';});
-  scrim('<div class="tut"><div class="ill">'+img(PHOTO,'edit-photo-01','','')+'<svg viewBox="0 0 248 150" preserveAspectRatio="xMidYMid slice">'+strands+'</svg></div>'+
+  scrim('<div class="tut"><div class="ill">'+img('img-hairstyle-thumb-01.jpg','growth-tut','','')+'<svg viewBox="0 0 248 150" preserveAspectRatio="xMidYMid slice">'+strands+'</svg></div>'+
     '<h4>Growth</h4><p>Brush where you want more or longer hair. Pick <b>Thick</b> for fuller strands or <b>Airy</b> for light, wispy ones.</p><button class="pbtn" id="tutok">Got It</button></div>');
   document.getElementById('tutok').onclick=function(){st.growthTutDone=true;scrim();render();};
 }
