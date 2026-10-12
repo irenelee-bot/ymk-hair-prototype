@@ -429,9 +429,9 @@ function enrichBody(){
   var G=st.growth, lock=!!st.proc;
   var opt=function(k,label){return '<button class="opt'+(G.style===k?' on':'')+'" data-gs="'+k+'"><span class="box">'+(k==='thick'?IC_THICK:IC_AIRY)+'</span>'+label+'</button>';};
   return '<div class="grow2"><span class="dotsm"></span><input id="size" type="range" min="10" max="80" value="'+G.size+'" aria-label="Brush size"><span class="dotlg"></span>'+
-      '<button class="pbtn gen" id="gen"'+(G.drawn&&!lock?'':' disabled')+'>'+(lock?'Processing…':'Generate')+'</button></div>'+
+      '<div class="ibtns"><button data-gm="brush" class="'+(G.mode==='brush'?'on':'')+'" aria-label="Brush">'+IC.brush+'</button><button data-gm="eraser" class="'+(G.mode==='eraser'?'on':'')+'" aria-label="Eraser">'+IC.eraser+'</button></div></div>'+
     '<div class="grow1">'+opt('thick','Thick')+opt('airy','Airy')+
-      '<span class="gsp"></span><div class="ibtns"><button data-gm="brush" class="'+(G.mode==='brush'?'on':'')+'" aria-label="Brush">'+IC.brush+'</button><button data-gm="eraser" class="'+(G.mode==='eraser'?'on':'')+'" aria-label="Eraser">'+IC.eraser+'</button></div></div>';
+      '<span class="gsp"></span><button class="pbtn gen" id="gen"'+(G.drawn&&!lock?'':' disabled')+'>'+(lock?'Processing…':'Generate')+'</button></div>';
 }
 function bindBody(){
   var b=app.querySelector('#rbody');
