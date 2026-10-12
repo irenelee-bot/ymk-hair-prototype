@@ -223,8 +223,8 @@ svg.i { width:20px; height:20px; display:block; flex:none; }
 .alert .acts button + button { border-left:1px solid #e3e3e6; }
 .alert .acts .strong { color:var(--pink); font-weight:700; }
 .tut { background:#fff; border-radius:16px; padding:18px 16px 14px; width:100%; display:flex; flex-direction:column; gap:10px; text-align:center; }
-.tut .ill { height:150px; border-radius:12px; overflow:hidden; position:relative; }
-.tut .ill img { width:100%; height:100%; object-fit:cover; object-position:center 8%; display:block; }
+.tut .ill { height:190px; border-radius:12px; overflow:hidden; position:relative; }
+.tut .ill img { width:100%; height:100%; object-fit:cover; object-position:center 22%; display:block; }
 .tut .ill svg { position:absolute; inset:0; width:100%; height:100%; }
 .tut h4 { font-size:17px; }
 .tut p { font-size:12.5px; color:#555; line-height:1.5; }
@@ -473,7 +473,7 @@ function startProc(key,res){
 /* ===== Growth: tutorial + drawing ===== */
 function showGrowthTut(){
   var strands='';[[95,18,70,16,6,0],[120,12,76,18,7,.5],[145,16,66,16,6,1]].forEach(function(a){strands+='<path d="'+strandPath.apply(null,a)+'" fill="rgba(238,61,120,.6)"/>';});
-  scrim('<div class="tut"><div class="ill">'+img('img-hairstyle-thumb-01.jpg','growth-tut','','')+'<svg viewBox="0 0 248 150" preserveAspectRatio="xMidYMid slice">'+strands+'</svg></div>'+
+  scrim('<div class="tut"><div class="ill">'+img('img-hairstyle-thumb-01.jpg','growth-tut','','')+'<svg viewBox="0 0 248 190" preserveAspectRatio="xMidYMid slice">'+strands+'</svg></div>'+
     '<h4>Growth</h4><p>Brush where you want more or longer hair. Pick <b>Thick</b> for fuller strands or <b>Airy</b> for light, wispy ones.</p><button class="pbtn" id="tutok">Got It</button></div>');
   document.getElementById('tutok').onclick=function(){st.growthTutDone=true;scrim();render();};
 }
