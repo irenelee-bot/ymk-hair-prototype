@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>YMK Hair Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* YMK light app: one deliberate light look (the prototype depicts the real app) */
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root{
+  --bg:#FFFFFF; --ink:#1C1C22; --muted:#8A8A93; --line:#ECECF0; --stage:#ADADAD;
+  --pink:#EE3D78; --pink-2:#F86A97; --pink-soft:#FDE6EE; --dim:rgba(20,20,26,.72);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+}
+html, body { width:100%; height:100%; background:#111114; overflow:hidden; font-family:'Inter',-apple-system,system-ui,sans-serif; color:var(--ink); }
+.device-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#111114; }
+.phone-frame {
+  position:relative; width:320px; height:693px; background:var(--bg); border-radius:44px; overflow:hidden;
+  display:flex; flex-direction:column;
+  box-shadow:0 0 0 1px rgba(255,255,255,.13),0 0 0 8px #1d1d20,0 0 0 9px rgba(255,255,255,.07),0 40px 80px rgba(0,0,0,.6);
+}
+@media (min-width:481px){ :root{ --safe-top:44px; --safe-bot:14px; } .status-bar{ display:flex; } }
+@media (max-width:480px){
+  html, body { background:var(--bg); height:100lvh; }
+  .device-wrap { display:block; padding:0; background:var(--bg); height:100lvh; min-height:0; overflow:hidden; }
+  .phone-frame { width:320px !important; height:calc(100lvh / var(--mob-scale,1)) !important; border-radius:0 !important; box-shadow:none !important; transform-origin:top left; }
+}
+.status-bar { position:absolute; top:0; left:0; right:0; height:var(--safe-top); display:none; align-items:flex-end; justify-content:space-between; padding:0 26px 9px; z-index:150; pointer-events:none; font-size:13px; font-weight:700; }
+.status-bar .sig { display:flex; gap:5px; align-items:center; }
+.app { flex:1; min-height:0; position:relative; }
+.screen { position:absolute; inset:0; display:flex; flex-direction:column; padding-top:var(--safe-top); padding-bottom:var(--safe-bot); background:var(--bg); }
+.screen[hidden]{ display:none; }
+button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+button:focus-visible { outline:2px solid var(--pink); outline-offset:2px; border-radius:6px; }
+svg.i { width:20px; height:20px; display:block; flex:none; }
+
+/* ---------- edit page ---------- */
+.topbar { height:44px; flex:none; display:flex; align-items:center; gap:16px; padding:0 14px; }
+.topbar .sp { flex:1; }
+.save { background:var(--pink); color:#fff; font-weight:600; font-size:13px; border-radius:999px; padding:5px 14px; }
+.dimmed { opacity:.3; }
+.stage { flex:1; min-height:0; position:relative; overflow:hidden; background:#000; }
+.stage img.photo { width:100%; height:100%; object-fit:cover; display:block; }
+.ovl-pill { position:absolute; top:10px; right:10px; background:rgba(30,30,34,.62); border-radius:20px; padding:6px 10px; display:flex; gap:12px; }
+.ovl-pill svg { width:18px; height:18px; }
+.tools { height:72px; flex:none; display:flex; align-items:center; overflow-x:auto; scrollbar-width:none; border-bottom:1px solid var(--line); padding:0 4px; }
+.tools::-webkit-scrollbar{ display:none; }
+.tool { width:66px; flex:none; display:flex; flex-direction:column; align-items:center; gap:5px; font-size:10.5px; color:#4a4a52; font-weight:400; position:relative; padding:6px 0; }
+.tool svg { width:26px; height:26px; }
+.tool .n { position:absolute; top:0; right:10px; width:16px; height:16px; border-radius:50%; background:var(--pink); color:#fff; font-size:9px; font-weight:700; display:grid; place-items:center; }
+.vdiv { width:1px; height:30px; background:#D5D9C6; flex:none; margin:0 6px; }
+.cats { height:44px; flex:none; display:flex; align-items:center; justify-content:space-around; font-size:12px; letter-spacing:.04em; font-weight:500; padding:0 4px; }
+.cats button { padding:4px 10px; border-radius:999px; }
+.cats .on { color:var(--pink); background:var(--pink-soft); font-weight:600; }
+
+/* ---------- feature room ---------- */
+.roomtop { height:44px; flex:none; display:flex; align-items:center; gap:12px; padding:0 12px; position:relative; }
+.roomtop .title { position:absolute; left:0; right:0; text-align:center; font-size:15px; font-weight:600; pointer-events:none; }
+.hpill { background:linear-gradient(90deg,#F2557F,#F8829F); color:#fff; font-weight:600; font-size:12px; border-radius:999px; padding:4px 10px; position:relative; z-index:1; }
+.rstage { flex:1; min-height:0; position:relative; background:var(--stage); display:flex; justify-content:center; overflow:hidden; }
+.rstage .pwrap { position:relative; height:100%; }
+.rstage img.photo { height:100%; width:auto; display:block; transition:filter .4s; }
+.rstage canvas { position:absolute; inset:0; width:100%; height:100%; touch-action:none; }
+.cmpbtn { position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:50%; background:rgba(70,70,74,.72); display:grid; place-items:center; z-index:3; }
+.cmpbtn svg { width:16px; height:16px; }
+.badge { pointer-events:none; position:absolute; left:8px; top:8px; background:rgba(0,0,0,.55); color:#fff; font-size:10px; font-weight:700; border-radius:4px; padding:2px 6px; z-index:2; }
+.proc { position:absolute; left:10px; right:10px; top:34%; background:rgba(40,40,44,.86); color:#fff; border-radius:10px; padding:10px 12px; font-size:12.5px; line-height:1.45; text-align:center; z-index:4; }
+.sheet { flex:none; height:56%; transition:height .25s; background:#fff; border-radius:18px 18px 0 0; margin-top:-14px; position:relative; z-index:5; display:flex; flex-direction:column; box-shadow:0 -2px 10px rgba(0,0,0,.06); }
+.chev { height:22px; display:grid; place-items:center; flex:none; }
+.chev svg { width:18px; height:18px; }
+.rtabs { flex:none; display:flex; gap:20px; padding:0 14px; overflow-x:auto; scrollbar-width:none; border-bottom:2px solid #F2F2F4; white-space:nowrap; }
+.rtabs::-webkit-scrollbar{ display:none; }
+.rtabs button { font-size:13.5px; padding:6px 0 7px; color:#2a2a30; position:relative; flex:none; }
+.rtabs button.on { color:var(--pink); font-weight:600; }
+.rtabs button.on::after { content:""; position:absolute; left:-6px; right:-6px; bottom:-2px; height:3px; border-radius:2px; background:var(--pink); }
+.rtabs .dot { position:absolute; top:3px; right:-8px; width:6px; height:6px; border-radius:50%; background:var(--pink); }
+.rtabs .mv { font-size:9px; font-weight:700; color:var(--muted); margin-left:3px; vertical-align:super; }
+.rbody { flex:1; min-height:0; overflow-y:auto; scrollbar-width:none; padding:10px 10px 6px; }
+.rbody::-webkit-scrollbar{ display:none; }
+.gender { display:flex; justify-content:center; gap:12px; margin-bottom:10px; font-size:14px; }
+.gender span { padding:2px 12px; border-radius:999px; }
+.gender .on { background:var(--pink); color:#fff; font-weight:600; }
+.grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px 6px; }
+.tcard { display:flex; flex-direction:column; align-items:center; gap:4px; font-size:10.5px; text-align:center; line-height:1.25; }
+.tcard .th { width:100%; aspect-ratio:200/245; border-radius:8px; overflow:hidden; border:1px solid #DDD; position:relative; background:#F2F2F4; }
+.tcard .th img { width:100%; height:100%; object-fit:cover; display:block; }
+.tcard.sel .th { border:2px solid var(--pink); }
+.tcard .ph { position:absolute; inset:0; display:grid; place-items:center; color:#9a9aa2; }
+.tcard .ph svg { width:26px; height:26px; }
+.tcard .nb { position:absolute; left:0; top:0; background:var(--pink); color:#fff; font-size:8.5px; font-weight:700; padding:1px 5px; border-radius:0 0 6px 0; z-index:1; }
+.tcard .run { position:absolute; inset:0; background:rgba(40,40,44,.45); display:grid; place-items:center; }
+.tcard .bar { width:70%; height:3px; border-radius:2px; background:rgba(255,255,255,.55); overflow:hidden; }
+.tcard .bar i { display:block; height:100%; width:0; background:var(--pink); animation:fill 3.2s linear forwards; }
+@keyframes fill { to { width:100%; } }
+.custom { display:grid; place-items:center; gap:4px; font-size:11px; }
+.custom .plus { width:24px; height:24px; border-radius:50%; background:#111; color:#fff; display:grid; place-items:center; font-size:18px; line-height:1; }
+.rbar { height:52px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 18px; border-top:1px solid var(--line); background:#fff; position:relative; z-index:6; }
+.rbar svg { width:22px; height:22px; }
+.moved { margin:18px 8px; border:1px dashed #D9D9DF; border-radius:14px; padding:22px 16px; display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; }
+.moved .ic { width:44px; height:44px; border-radius:50%; background:var(--pink-soft); display:grid; place-items:center; }
+.moved b { font-size:15px; }
+.moved p { font-size:12px; color:var(--muted); line-height:1.5; }
+.pbtn { background:var(--pink); color:#fff; font-weight:700; font-size:13.5px; border-radius:999px; padding:9px 18px; }
+.pbtn[disabled] { background:#F5C3D4; cursor:default; }
+.panel { display:flex; flex-direction:column; gap:10px; padding-top:2px; }
+.opts { display:flex; justify-content:center; gap:30px; }
+.opt { display:flex; flex-direction:column; align-items:center; gap:5px; font-size:12px; color:#555; }
+.opt .box { width:60px; height:60px; border-radius:12px; background:#F2F2F5; border:2px solid transparent; display:grid; place-items:center; }
+.opt .box svg { width:46px; height:46px; }
+.opt.on { color:var(--pink); font-weight:600; }
+.opt.on .box { border-color:var(--pink); background:#FFF0F5; }
+.brow { display:flex; align-items:center; gap:10px; padding:0 6px; }
+.seg { display:flex; background:#F1F1F3; border-radius:999px; padding:2px; font-size:12px; font-weight:600; }
+.seg button { padding:5px 12px; border-radius:999px; color:#777; }
+.seg button.on { background:#1C1C22; color:#fff; }
+.brow input[type=range] { flex:1; accent-color:var(--pink); }
+.brow .val { width:20px; font-size:11px; color:#555; text-align:right; font-variant-numeric:tabular-nums; }
+.hint { font-size:11.5px; color:var(--muted); text-align:center; }
+.wide { align-self:stretch; margin:0 6px; height:42px; }
+.sfoot { flex:none; padding:0 10px 8px; display:flex; flex-direction:column; }
+.sfoot:empty { display:none; }
+
+/* ---------- Hair Enrich: short panel ---------- */
+.ticon { width:26px; height:26px; object-fit:contain; display:block; }
+.epanel { flex:none; background:#fff; padding:10px 0 4px; display:flex; flex-direction:column; gap:10px; border-top:1px solid var(--line); }
+.trow { display:flex; gap:8px; overflow-x:auto; padding:0 10px; scrollbar-width:none; }
+.trow::-webkit-scrollbar{ display:none; }
+.tt { flex:none; width:60px; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:10.5px; color:#3a3a42; }
+.tt .th { width:60px; height:74px; border-radius:10px; overflow:hidden; border:2px solid transparent; position:relative; background:#F2F2F4; }
+.tt .th img { width:100%; height:100%; object-fit:cover; display:block; }
+.tt.sel .th { border-color:var(--pink); }
+.tt.sel { color:var(--pink); font-weight:600; }
+.tt .orig { background:#1C1C22; display:grid; place-items:center; }
+.tt .orig svg, .tt .chk svg { width:24px; height:24px; }
+.tt .chk { position:absolute; inset:0; background:rgba(0,0,0,.35); display:grid; place-items:center; }
+.tt .run { position:absolute; inset:0; background:rgba(40,40,44,.45); display:grid; place-items:center; }
+.tt .bar { width:70%; height:3px; border-radius:2px; background:rgba(255,255,255,.55); overflow:hidden; }
+.tt .bar i { display:block; height:100%; width:0; background:var(--pink); animation:fill 3.2s linear forwards; }
+.gopts { display:flex; justify-content:center; gap:34px; }
+.gfoot { display:flex; justify-content:center; padding:0 10px; }
+.gfoot .pbtn { width:100%; height:40px; }
+.ebar { height:50px; flex:none; display:flex; align-items:center; gap:10px; padding:0 14px; border-top:1px solid var(--line); background:#fff; }
+.ebar svg { width:24px; height:24px; }
+.etabs { flex:1; display:flex; justify-content:center; gap:20px; }
+.etabs button { font-size:15px; color:#8a8a93; position:relative; padding:6px 0; }
+.etabs button.on { color:var(--ink); font-weight:700; }
+.etabs button.on::after { content:""; position:absolute; left:30%; right:30%; bottom:-2px; height:3px; border-radius:2px; background:var(--pink); }
+.etabs .dot { position:absolute; top:4px; right:-8px; width:6px; height:6px; border-radius:50%; background:var(--pink); }
+
+/* Hair Enrich v3: scrollable feature tabs + compact panels */
+.epanel { padding:0 0 8px; gap:8px; }
+.ftabs { display:flex; gap:18px; padding:0 14px; overflow-x:auto; scrollbar-width:none; border-bottom:1px solid var(--line); white-space:nowrap; }
+.ftabs::-webkit-scrollbar{ display:none; }
+.ftabs button { flex:none; font-size:13px; color:#8a8a93; padding:9px 0 8px; position:relative; }
+.ftabs button.on { color:var(--ink); font-weight:600; }
+.ftabs button.on::after { content:""; position:absolute; left:20%; right:20%; bottom:-1px; height:2px; border-radius:2px; background:var(--pink); }
+.ftabs .dot { position:absolute; top:7px; right:-7px; width:5px; height:5px; border-radius:50%; background:var(--pink); }
+.ebody { display:flex; flex-direction:column; gap:8px; }
+.ebar { height:44px; justify-content:space-between; }
+.ebar svg { width:22px; height:22px; }
+.etitle { font-size:13px; font-weight:600; color:var(--ink); }
+.tt { width:54px; font-size:10px; }
+.tt .th { width:54px; height:66px; border-radius:8px; border-width:1.5px; }
+.tt .orig svg, .tt .chk svg { width:20px; height:20px; }
+.grow1 { display:flex; align-items:center; gap:8px; padding:0 12px; }
+.gchip { display:flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:999px; padding:3px 10px 3px 3px; font-size:11.5px; color:#4a4a52; }
+.gchip img { width:24px; height:24px; border-radius:50%; object-fit:cover; display:block; }
+.gchip.on { border-color:var(--pink); color:var(--pink); background:#FFF3F7; font-weight:600; }
+.gsp { flex:1; }
+.ibtns { display:flex; background:#F1F1F3; border-radius:999px; padding:2px; }
+.ibtns button { width:30px; height:26px; border-radius:999px; display:grid; place-items:center; }
+.ibtns button svg { width:16px; height:16px; }
+.ibtns button.on { background:#1C1C22; }
+.ibtns button.on svg path { stroke:#fff; }
+.grow2 { display:flex; align-items:center; gap:8px; padding:0 12px; }
+.grow2 input[type=range] { flex:1; accent-color:var(--pink); height:18px; }
+.dotsm,.dotlg { flex:none; border-radius:50%; background:#C9C9D0; }
+.dotsm { width:5px; height:5px; } .dotlg { width:11px; height:11px; }
+.pbtn.gen { height:32px; padding:0 16px; font-size:12.5px; font-weight:600; flex:none; }
+
+/* ---------- history ---------- */
+.hhead { height:46px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 12px; font-weight:700; font-size:16px; }
+.htabs { flex:none; display:flex; font-size:14px; font-weight:600; }
+.htabs span { flex:1; text-align:center; padding:9px 0; color:#999; border-bottom:1px solid #eee; }
+.htabs .on { color:var(--pink); border-bottom:2px solid var(--pink); }
+.hbody { flex:1; min-height:0; overflow-y:auto; padding:10px 12px 70px; display:flex; flex-direction:column; gap:10px; scrollbar-width:none; }
+.dd { border:1px solid #ddd; border-radius:8px; padding:7px 10px; font-size:13px; display:flex; justify-content:space-between; align-items:center; }
+.dd select { border:0; font:inherit; background:none; flex:1; color:var(--ink); }
+.info { display:flex; justify-content:space-between; gap:8px; align-items:center; font-size:10.5px; color:#666; }
+.info .sel { border:1px solid #ccc; border-radius:999px; padding:2px 10px; color:#333; font-weight:600; white-space:nowrap; }
+.hgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.hcard { display:flex; flex-direction:column; gap:4px; text-align:left; }
+.hcard .im { height:180px; border-radius:10px; overflow:hidden; position:relative; background:#eee; }
+.hcard .im img { width:100%; height:100%; object-fit:cover; display:block; }
+.hcard .ex { font-size:10px; color:#777; }
+.hcard .tag { position:absolute; left:6px; top:6px; background:rgba(0,0,0,.55); color:#fff; font-size:9px; font-weight:700; border-radius:4px; padding:1px 5px; }
+.wip { position:absolute; inset:0; background:rgba(255,255,255,.55); backdrop-filter:blur(4px); display:grid; place-content:center; justify-items:center; gap:6px; font-size:11px; font-weight:600; }
+.ring { width:26px; height:26px; border-radius:50%; border:3px solid rgba(238,61,120,.25); border-top-color:var(--pink); animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.empty { text-align:center; color:var(--muted); font-size:13px; padding:40px 0; }
+.fab { position:absolute; left:50%; bottom:calc(var(--safe-bot) + 16px); transform:translateX(-50%); background:var(--pink); color:#fff; font-weight:700; border-radius:999px; padding:10px 24px; font-size:14px; box-shadow:0 4px 12px rgba(238,61,120,.35); }
+.rp { flex:1; min-height:0; overflow-y:auto; padding:6px 12px 12px; display:flex; flex-direction:column; gap:12px; scrollbar-width:none; }
+.rcard { background:#F3F3F5; border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:10px; }
+.rimg { height:240px; border-radius:12px; overflow:hidden; position:relative; }
+.rimg img { width:100%; height:100%; object-fit:cover; object-position:center 15%; display:block; }
+.racts { display:flex; justify-content:space-around; }
+.racts button { display:flex; flex-direction:column; align-items:center; gap:4px; font-size:10px; color:#333; }
+.racts span { width:38px; height:38px; border-radius:50%; background:#fff; display:grid; place-items:center; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.racts svg { width:18px; height:18px; }
+.share { text-align:center; font-size:13px; font-weight:700; display:flex; flex-direction:column; gap:8px; }
+.share .row { display:flex; justify-content:space-between; font-weight:400; }
+.share .row div { display:flex; flex-direction:column; align-items:center; gap:4px; font-size:9.5px; color:#444; }
+.share .row i { width:34px; height:34px; border-radius:50%; display:block; }
+
+/* ---------- overlays ---------- */
+.scrim { position:absolute; inset:0; background:rgba(0,0,0,.42); display:flex; align-items:center; justify-content:center; padding:24px; z-index:50; }
+.scrim[hidden]{ display:none; }
+.alert { background:#fff; border-radius:14px; width:100%; overflow:hidden; text-align:center; }
+.alert p { padding:20px 18px; font-size:14px; line-height:1.45; }
+.alert .acts { display:flex; border-top:1px solid #e3e3e6; }
+.alert .acts button { flex:1; padding:12px; font-size:15px; }
+.alert .acts button + button { border-left:1px solid #e3e3e6; }
+.alert .acts .strong { color:var(--pink); font-weight:700; }
+.tut { background:#fff; border-radius:16px; padding:18px 16px 14px; width:100%; display:flex; flex-direction:column; gap:10px; text-align:center; }
+.tut .ill { height:150px; border-radius:12px; overflow:hidden; position:relative; }
+.tut .ill img { width:100%; height:100%; object-fit:cover; object-position:center 8%; display:block; }
+.tut .ill svg { position:absolute; inset:0; width:100%; height:100%; }
+.tut h4 { font-size:17px; }
+.tut p { font-size:12.5px; color:#555; line-height:1.5; }
+.toast { position:absolute; left:50%; bottom:calc(var(--safe-bot) + 70px); transform:translateX(-50%); background:rgba(28,28,34,.9); color:#fff; font-size:12px; border-radius:10px; padding:8px 12px; z-index:60; white-space:nowrap; transition:opacity .2s; }
+.toast[hidden]{ display:none; }
+@media (prefers-reduced-motion:reduce){ .ring{ animation:none; } .tcard .bar i{ animation-duration:.01s; } }
+</style>
+</head>
+<body>
+<div class="device-wrap">
+<div class="phone-frame">
+  <div class="status-bar"><span>4:44</span><span class="sig"><svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx="1" fill="#1C1C22"/><rect x="4.3" y="4" width="3" height="6" rx="1" fill="#1C1C22"/><rect x="8.6" y="2" width="3" height="8" rx="1" fill="#1C1C22"/><rect x="12.9" y="0" width="3" height="10" rx="1" fill="#1C1C22"/></svg>4G<svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="3" fill="none" stroke="#1C1C22"/><rect x="2" y="2" width="12" height="7" rx="1.5" fill="#1C1C22"/><rect x="20.3" y="3.5" width="1.4" height="4" rx=".7" fill="#1C1C22"/></svg></span></div>
+  <div class="app" id="app"></div>
+  <div class="scrim" id="scrim" hidden></div>
+  <div class="toast" id="toast" hidden></div>
+</div>
+</div>
+
+<script>
+/* ===== icons (inline SVG) ===== */
+var S='stroke="#1C1C22" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+var IC={
+ back:'<svg class="i" viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8" '+S+'/></svg>',
+ gal:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" '+S+'/><path d="M6 17l4-5 3 3 2-2 3 4z" fill="#1C1C22"/><circle cx="9" cy="9" r="1.6" fill="#1C1C22"/></svg>',
+ face:'<svg class="i" viewBox="0 0 24 24"><circle cx="14" cy="14" r="7" '+S+'/><circle cx="7" cy="15" r="4" '+S+'/><circle cx="12" cy="13" r=".9" fill="#1C1C22"/><circle cx="16" cy="13" r=".9" fill="#1C1C22"/><path d="M11.5 16.5q2.5 2 5 0" '+S+'/><path d="M10 6a6 6 0 0 1 8 0" '+S+'/></svg>',
+ undo:'<svg class="i" viewBox="0 0 24 24"><path d="M9 6H4v5M4 11a8 8 0 1 1 2 6" '+S+'/></svg>',
+ redo:'<svg class="i" viewBox="0 0 24 24"><path d="M15 6h5v5M20 11a8 8 0 1 0-2 6" '+S+'/></svg>',
+ home:'<svg class="i" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z" '+S+'/></svg>',
+ x:'<svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" '+S+'/></svg>',
+ ok:function(on){return '<svg viewBox="0 0 24 24" style="opacity:'+(on?1:.35)+'"><path d="M3 12.5l6 5.5L21 6" stroke="#EE3D78" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';},
+ chev:'<svg viewBox="0 0 24 24"><path d="M5 9l7 7 7-7" '+S+'/></svg>',
+ sel:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="3 2"/><path d="M14 14l6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>',
+ cmp:'<svg viewBox="0 0 24 24"><path d="M12 3v18" stroke="#fff" stroke-width="1.6"/><path d="M10 6H5v12h5" stroke="#fff" stroke-width="1.6" fill="none"/><path d="M14 6h5v12h-5" stroke="#fff" stroke-width="1.6" fill="none" stroke-dasharray="2 2"/></svg>',
+ scissor:'<svg viewBox="0 0 24 24"><circle cx="6" cy="18" r="3" '+S+'/><circle cx="18" cy="18" r="3" '+S+'/><path d="M8 16L19 3M16 16L5 3" '+S+'/></svg>',
+ brush:'<svg viewBox="0 0 24 24"><path d="M14.5 4.5l5 5L10 19l-5.5.5L5 14z" '+S+'/><path d="M12.5 6.5l5 5" '+S+'/></svg>',
+ eraser:'<svg viewBox="0 0 24 24"><path d="M8 20h12M4.5 15.5l9-9a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 19H7.5z" '+S+'/><path d="M9 11l5 5" '+S+'/></svg>',
+ move:'<svg viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M4 12h14M13 6l6 6-6 6" stroke="#EE3D78" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ dl:'<svg viewBox="0 0 24 24"><path d="M12 4v11m-5-5l5 5 5-5M5 20h14" '+S+'/></svg>',
+ img:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" '+S+'/><path d="M6 17l4-5 3 3 2-2 3 4z" fill="#1C1C22"/></svg>',
+ retry:'<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2M20 4v5h-5M4 20v-5h5" '+S+'/></svg>',
+ anim:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" '+S+'/><path d="M10 9l5 3-5 3z" fill="#1C1C22"/></svg>',
+ t_agent:'<svg viewBox="0 0 32 32"><rect x="4" y="7" width="24" height="17" rx="4" '+S+'/><path d="M10 28l3-4" '+S+'/><path d="M12 14l1 2 2 1-2 1-1 2-1-2-2-1 2-1zM20 13l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" fill="#EE3D78"/></svg>',
+ t_retouch:'<svg viewBox="0 0 32 32"><path d="M8 27V15c0-6 4-10 8-10s8 4 8 10v12" fill="#2a2a2a"/><circle cx="16" cy="17" r="6" fill="#fff"/><path d="M20 21l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" fill="#2a2a2a"/></svg>',
+ t_reshape:'<svg viewBox="0 0 32 32"><path d="M10 10a8 8 0 0 1 12 0M10 22a8 8 0 0 0 12 0M4 16h6M22 16h6M7 13l-3 3 3 3M25 13l3 3-3 3" '+S+'/><path d="M13 19q3 2 6 0" '+S+'/></svg>',
+ t_makeup:'<svg viewBox="0 0 32 32"><rect x="12" y="14" width="8" height="14" rx="1" fill="#2a2a2a"/><path d="M13 14V8l6-3v9" fill="#2a2a2a"/></svg>',
+ t_auto:'<svg viewBox="0 0 32 32"><path d="M9 26V14c0-5 3-9 7-9s7 4 7 9v12" '+S+'/><path d="M5 9l1 2 2 1-2 1-1 2-1-2-2-1 2-1zM26 22l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" fill="#2a2a2a"/></svg>',
+ t_hs:'<svg viewBox="0 0 32 32"><path d="M7 26c-2-6-1-14 5-17 6-3 12 0 13 6 1 4-1 6-3 7l1 4h-5l-1-3c-3 0-4-1-4-3v-3l-3 1c0 3 0 6 1 8z" fill="#2a2a2a"/><path d="M26 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1zM28 12l.6 1.2 1.2.6-1.2.6-.6 1.2-.6-1.2-1.2-.6 1.2-.6z" fill="#2a2a2a"/></svg>',
+ t_hc:'<svg viewBox="0 0 32 32"><path d="M7 27V14c0-6 4-10 9-10s9 4 9 10v13h-4V15c0-2-2-4-5-4s-5 2-5 4v12z" fill="#2a2a2a"/></svg>',
+ t_he:'<svg viewBox="0 0 32 32"><path d="M6 27V15c0-6 4-10 9-10 4 0 7 2 8 6" '+S+'/><path d="M10 27V16c0-3 2-5 5-5" '+S+'/><path d="M18 18v9M22 15v12M26 18v9" stroke="#EE3D78" stroke-width="1.8" stroke-linecap="round"/><path d="M24 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" fill="#2a2a2a"/></svg>',
+ t_bd:'<svg viewBox="0 0 32 32"><path d="M9 8c0-3 3-5 7-5s7 2 7 5v6c0 7-3 13-7 13s-7-6-7-13z" '+S+'/><path d="M9 15c1 6 3 10 7 10s6-4 7-10c-2 2-4 3-7 3s-5-1-7-3z" fill="#2a2a2a"/></svg>',
+ t_aw:'<svg viewBox="0 0 32 32"><path d="M12 4l2 4h4l2-4M11 8h10l-2 6 6 12H7l6-12z" '+S+'/></svg>',
+ t_cl:'<svg viewBox="0 0 32 32"><path d="M11 5l-7 4 3 6 3-1v13h12V14l3 1 3-6-7-4c-1 2-3 3-5 3s-4-1-5-3z" '+S+'/></svg>'
+};
+/* strand icons for Growth / Smooth options */
+function strandPath(x,y,len,w,amp,ph){var L=[],R=[];for(var i=0;i<=20;i++){var t=i/20,cx=x+amp*Math.sin(t*Math.PI*1.4+ph),cy=y+len*t,hw=w/2*Math.pow(1-t,.9)*(t<.08?.6+5*t:1);L.push([cx-hw,cy]);R.push([cx+hw,cy]);}
+  return 'M'+L.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' L')+' L'+R.reverse().map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' L')+'Z';}
+function airyPath(x,y,len,sp,amp,ph){var o='';for(var j=0;j<5;j++){var off=(j-2)*sp/4,l=len*(.75+.25*((j*37)%10)/10),pts=[];for(var i=0;i<=16;i++){var t=i/16;pts.push((x+off+amp*Math.sin(t*Math.PI*1.4+ph+j*.15)).toFixed(1)+' '+(y+l*t).toFixed(1));}o+='<path d="M'+pts.join(' L')+'" fill="none" stroke="#3a2a25" stroke-width="1.1" stroke-linecap="round"/>';}return o;}
+var IC_THICK='<svg viewBox="0 0 46 46"><path d="'+strandPath(12,6,34,7,3,0)+'" fill="#3a2a25"/><path d="'+strandPath(23,5,36,8,3,.4)+'" fill="#3a2a25"/><path d="'+strandPath(34,6,33,7,3,.8)+'" fill="#3a2a25"/></svg>';
+var IC_AIRY='<svg viewBox="0 0 46 46">'+airyPath(12,6,34,6,3,0)+airyPath(23,5,36,7,3,.4)+airyPath(34,6,33,6,3,.8)+'</svg>';
+var IC_SMOOTH='<svg viewBox="0 0 46 46"><path d="M12 6 Q8 26 12 40M20 5 Q16 26 20 41M28 5 Q24 26 28 41M36 6 Q32 26 36 40" fill="none" stroke="#3a2a25" stroke-width="2.4" stroke-linecap="round"/></svg>';
+var IC_FLY='<svg viewBox="0 0 46 46"><path d="M14 8 Q10 26 14 40M24 6 Q20 26 24 41M34 8 Q30 26 34 40" fill="none" stroke="#3a2a25" stroke-width="2.4" stroke-linecap="round"/><path d="M14 14q-6-2-9-8M24 12q7-4 10-9M34 18q6 0 9-5M14 26q-7 1-10-2" fill="none" stroke="#3a2a25" stroke-width="1" stroke-linecap="round" stroke-dasharray="2 2"/></svg>';
+
+/* ===== assets ===== */
+function img(src,seed,cls,alt){return '<img class="'+(cls||'')+'" src="assets/images/'+src+'" alt="'+(alt||'')+'" onerror="this.onerror=null;this.src=\'https://picsum.photos/seed/'+seed+'/300/400\'">';}
+var PHOTO='img-edit-photo-01.jpg', RESULT_HS='img-result-hairstyle-01.jpg';
+var HS_THUMBS=[['img-hairstyle-thumb-01.jpg','Face Framing Shag Cut'],['img-hairstyle-thumb-02.jpg','Bow Accents'],['img-hairstyle-thumb-03.jpg','High Pony Tail'],['img-hairstyle-thumb-04.jpg','Split Rainbow'],['img-hairstyle-thumb-05.jpg','Long Boho Waves'],['img-hairstyle-thumb-06.jpg','Curly Double Buns'],['img-hairstyle-thumb-07.jpg','Choppy Bob']];
+var VOL_THUMBS=[['img-volume-thumb-01.jpg','Maximized'],['img-volume-thumb-02.jpg','Natural'],['img-volume-thumb-03.jpg','Medium'],['img-volume-thumb-04.jpg','High'],['img-volume-thumb-05.jpg','Subtle']];
+
+/* ===== state ===== */
+var st={
+  screen:'edit', cat:'BEAUTIFY',
+  applied:{src:PHOTO, filter:''}, undo:[],
+  enrichNew:true, growthTutDone:false,
+  room:null, tab:null, sel:null,
+  proc:null, result:null,       // result:{src,filter,label}
+  growth:{style:'thick', mode:'brush', size:40, drawn:false},
+  smooth:'smooth', gender:'Female',
+  history:[], histFilter:'All', prev:null, viewItem:null
+};
+var app=document.getElementById('app');
+function toast(t){var el=document.getElementById('toast');el.textContent=t;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(function(){el.hidden=true;},1600);}
+function scrim(html){var s=document.getElementById('scrim');if(!html){s.hidden=true;s.innerHTML='';return;}s.innerHTML=html;s.hidden=false;}
+
+/* ===== EDIT PAGE ===== */
+function renderEdit(){
+  var tools;
+  if(st.cat==='HAIR'){
+    tools='<div class="vdiv"></div>'+tool('img:img-tool-hairstyle.png','Hairstyle','hairstyle')+tool('img:img-tool-haircolor.png','Hair Color','na')+tool('t_he','Hair Enrich','enrich',st.enrichNew)+tool('img:img-tool-beard.png','Beard','na')+'<div class="vdiv"></div>'+tool('t_aw','AI Wardrobe','na')+tool('t_cl','Clothes','na');
+  } else {
+    tools=tool('t_agent','AI Agent','na')+tool('t_retouch','Retouch','na')+tool('t_reshape','Reshape','na',true)+tool('t_makeup','Makeup','na')+tool('t_auto','Auto','na');
+  }
+  var cats=['BEAUTIFY','BODY','HAIR','FASHION','EDIT'].map(function(c){return '<button data-cat="'+c+'" class="'+(c===st.cat?'on':'')+'">'+c+'</button>';}).join('');
+  app.innerHTML='<div class="screen">'+
+   '<div class="topbar">'+IC.back+IC.gal+IC.face+'<button id="undo" aria-label="Undo" class="'+(st.undo.length?'':'dimmed')+'">'+IC.undo+'</button><span class="dimmed">'+IC.redo+'</span><span class="sp"></span><button class="save" data-na="1">Save</button></div>'+
+   '<div class="stage">'+img(st.applied.src,'edit-photo-01','photo','Your photo').replace('class="photo"','class="photo" style="filter:'+st.applied.filter+'"')+'<div class="ovl-pill">'+IC.sel+IC.cmp+'</div></div>'+
+   '<div class="tools">'+tools+'</div><div class="cats">'+cats+'</div></div>';
+  app.querySelectorAll('[data-cat]').forEach(function(b){b.onclick=function(){st.cat=b.dataset.cat;if(st.cat!=='HAIR'&&st.cat!=='BEAUTIFY')toast('Prototype covers BEAUTIFY and HAIR only');render();};});
+  app.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){var g=b.dataset.go;
+    if(g==='hairstyle')openRoom('hairstyle','HOT'); else if(g==='enrich'){st.enrichNew=false;openRoom('enrich','Volume');} else toast('Existing feature, unchanged');};});
+  app.querySelector('#undo').onclick=function(){if(!st.undo.length)return;st.applied=st.undo.pop();render();};
+  app.querySelector('[data-na]').onclick=function(){toast('Save: existing flow');};
+}
+function tool(ic,name,go,n){var icon=ic.indexOf('img:')===0?'<img class="ticon" src="assets/images/'+ic.slice(4)+'" alt="" onerror="this.onerror=null;this.style.visibility=\'hidden\'">':IC[ic];return '<button class="tool" data-go="'+go+'">'+(n?'<span class="n">N</span>':'')+icon+name+'</button>';}
+
+/* ===== FEATURE ROOMS ===== */
+var ROOMS={
+  hairstyle:{title:'Hairstyle',tabs:['New','HOT','Styles','Bangs','Wavy','Extension','Hair Cut']},
+  enrich:{title:'Hair Enrich',tabs:['Volume','Growth','Smooth']}
+};
+function openRoom(r,tab){st.room=r;st.screen='room';st.result=null;st.sel=null;st.growth.drawn=false;setTab(tab);}
+function setTab(tab){st.tab=tab;st.sel=null;render();
+  if(st.room==='enrich'&&tab==='Growth'&&!st.growthTutDone) showGrowthTut();}
+function roomPhoto(){var src=st.result?st.result.src:st.applied.src;var f=st.result?st.result.filter:st.applied.filter;
+  return img(src,'edit-photo-01','photo','Photo').replace('class="photo"','class="photo" id="rphoto" style="filter:'+f+'"');}
+function renderRoom(){
+  var R=ROOMS[st.room];
+  var tabs=R.tabs.map(function(t){var extra='';
+    if(t==='Hair Cut')extra='<span class="dot"></span>';
+    if(st.room==='enrich'&&t==='Growth'&&!st.growthTutDone)extra='<span class="dot"></span>';
+    return '<button data-tab="'+t+'" class="'+(t===st.tab?'on':'')+'">'+t+extra+'</button>';}).join('');
+  var canDraw=(st.room==='enrich'&&st.tab==='Growth'&&!st.proc);
+  app.innerHTML='<div class="screen">'+
+   '<div class="roomtop">'+IC.gal+'<button class="hpill" id="hist">History</button><div class="title">'+R.title+'</div></div>'+
+   '<div class="rstage"><div class="pwrap" id="pwrap">'+roomPhoto()+(st.room==='enrich'&&st.tab==='Growth'?'<canvas id="cv"></canvas>':'')+(st.result&&st.result.filter?'<span class="badge">After · demo</span>':'')+'</div>'+
+     '<button class="cmpbtn" id="cmp" aria-label="Hold to compare">'+IC.cmp+'</button>'+
+     (st.proc?'<div class="proc">Processing...<br>You can view the results later in History page.</div>':'')+'</div>'+
+   (st.room==='enrich'
+     ? '<div class="epanel"><div class="ftabs" id="rtabs">'+tabs+'</div><div class="ebody" id="rbody">'+enrichBody()+'</div></div><div class="ebar"><button id="rx" aria-label="Close">'+IC.x+'</button><span class="etitle">'+st.tab+'</span><button id="rok" aria-label="Apply">'+IC.ok(!!st.result&&!st.proc)+'</button></div></div>'
+     : '<div class="sheet"><div class="chev">'+IC.chev+'</div><div class="rtabs" id="rtabs">'+tabs+'</div><div class="rbody" id="rbody">'+roomBody()+'</div><div class="sfoot" id="sfoot"></div></div>'+
+       '<div class="rbar"><button id="rx" aria-label="Close">'+IC.x+'</button><button id="rok" aria-label="Apply">'+IC.ok(!!st.result&&!st.proc)+'</button></div></div>');
+  // keep active tab in view
+  var on=app.querySelector('.rtabs .on, .ftabs .on'); if(on) on.scrollIntoView({inline:'center',block:'nearest'});
+  var tr=app.querySelector('.trow .sel'); if(tr) tr.scrollIntoView({inline:'center',block:'nearest'});
+  app.querySelectorAll('[data-tab]').forEach(function(b){b.onclick=function(){setTab(b.dataset.tab);};});
+  app.querySelector('#hist').onclick=function(){leaveCheck(function(){openHistory();});};
+  app.querySelector('#rx').onclick=function(){
+    if(st.proc){leaveCheck(function(){backToEdit();});return;}
+    if(st.result){scrim('<div class="alert"><p><b>Discard changes?</b><br>This result won\'t be applied to your photo. You can still find it in History.</p><div class="acts"><button id="a1">Discard</button><button id="a2" class="strong">Cancel</button></div></div>');
+      document.getElementById('a1').onclick=function(){scrim();backToEdit();};document.getElementById('a2').onclick=function(){scrim();};return;}
+    backToEdit();};
+  app.querySelector('#rok').onclick=function(){if(!st.result||st.proc)return;st.undo.push(st.applied);st.applied={src:st.result.src,filter:st.result.filter};st.cat='HAIR';backToEdit();};
+  var cmp=app.querySelector('#cmp'),ph=app.querySelector('#rphoto');
+  cmp.onpointerdown=function(){ph.src='assets/images/'+st.applied.src;ph.style.filter=st.applied.filter;};
+  cmp.onpointerup=cmp.onpointerleave=function(){if(st.result){ph.src='assets/images/'+st.result.src;ph.style.filter=st.result.filter;}};
+  bindBody();
+  var gb=app.querySelector('#gen'), sf=app.querySelector('#sfoot'); if(gb&&sf){ sf.appendChild(gb); }
+  if(canDraw) setupCanvas();
+}
+function backToEdit(){st.screen='edit';st.cat='HAIR';st.result=null;st.proc=null;render();}
+function leaveCheck(go){
+  if(!st.proc){go();return;}
+  scrim('<div class="alert"><p>If you leave now, your AI generated photos will appear under <b>History</b> once processing is complete.</p><div class="acts"><button id="a1">Leave</button><button id="a2" class="strong">Cancel</button></div></div>');
+  document.getElementById('a1').onclick=function(){scrim();st.proc.left=true;st.proc=null;go();};
+  document.getElementById('a2').onclick=function(){scrim();};
+}
+
+function grid(list,kind,withCustom){
+  var h='';
+  if(withCustom) h+='<button class="tcard" data-na="1"><div class="th"><span class="nb">New</span><div class="ph custom"><span class="plus">+</span>Add Photo</div></div>Custom</button>';
+  list.forEach(function(it,i){
+    var sel=st.sel===kind+i, running=st.proc&&st.proc.key===kind+i;
+    h+='<button class="tcard'+(sel?' sel':'')+'" data-pick="'+kind+'" data-i="'+i+'"><div class="th">'+
+      (it[0]?img(it[0],kind+'-'+i,'',it[1]):'<div class="ph">'+IC.scissor+'</div>')+
+      (running?'<div class="run"><div class="bar"><i></i></div></div>':'')+'</div>'+it[1]+'</button>';});
+  return '<div class="grid">'+h+'</div>';
+}
+function roomBody(){
+  if(st.room==='hairstyle'){
+    if(st.tab==='Volume') return '<div class="moved"><div class="ic">'+IC.move+'</div><b>Volume has moved</b><p>Find Volume in Hair Enrich, together with Growth and Smooth.</p><button class="pbtn" id="goEnrich">Go to Hair Enrich</button></div>';
+    if(st.tab==='Hair Cut') return grid([[null,'Hair Cut 1'],[null,'Hair Cut 2'],[null,'Hair Cut 3']],'cut');
+    var g='<div class="gender"><span class="'+(st.gender==='Female'?'on':'')+'" data-g="Female">Female</span><span class="'+(st.gender==='Male'?'on':'')+'" data-g="Male">Male</span></div>';
+    var list=st.tab==='HOT'||st.tab==='New'?HS_THUMBS:HS_THUMBS.slice({Styles:0,Bangs:1,Wavy:3,Extension:2}[st.tab]||0);
+    return (st.tab==='HOT'?g:'')+grid(list,'hs'+st.tab,st.tab==='HOT');
+  }
+  if(st.tab==='Volume') return grid(VOL_THUMBS,'vol');
+  if(st.tab==='Growth'){
+    var G=st.growth, lock=!!st.proc;
+    return '<div class="panel"><div class="opts">'+
+      '<button class="opt'+(G.style==='thick'?' on':'')+'" data-gs="thick"><span class="box">'+IC_THICK+'</span>Thick</button>'+
+      '<button class="opt'+(G.style==='airy'?' on':'')+'" data-gs="airy"><span class="box">'+IC_AIRY+'</span>Airy</button></div>'+
+      '<div class="brow"><div class="seg"><button data-gm="brush" class="'+(G.mode==='brush'?'on':'')+'">Brush</button><button data-gm="eraser" class="'+(G.mode==='eraser'?'on':'')+'">Eraser</button></div><input id="size" type="range" min="10" max="80" value="'+G.size+'" aria-label="Brush size"><span class="val" id="sv">'+G.size+'</span></div>'+
+      '<p class="hint">'+(G.drawn?'Tap Generate to add hair where you brushed.':'Brush on the photo where you want more or longer hair.')+'</p>'+
+      '<button class="pbtn wide" id="gen"'+(G.drawn&&!lock?'':' disabled')+'>'+(lock?'Processing...':'Generate')+'</button></div>';
+  }
+  var lock2=!!st.proc;
+  return '<div class="panel"><div class="opts">'+
+    '<button class="opt'+(st.smooth==='smooth'?' on':'')+'" data-sm="smooth"><span class="box">'+IC_SMOOTH+'</span>Smooth</button>'+
+    '<button class="opt'+(st.smooth==='fly'?' on':'')+'" data-sm="fly"><span class="box">'+IC_FLY+'</span>Flyaways</button></div>'+
+    '<p class="hint">'+(st.smooth==='smooth'?'Tame frizz and make hair look sleek.':'Remove stray, flyaway strands.')+'</p>'+
+    '<button class="pbtn wide" id="gen"'+(lock2?' disabled':'')+'>'+(lock2?'Processing...':'Generate')+'</button></div>';
+}
+function trow(items,kind){
+  var h='<button class="tt'+(st.result?'':' sel')+'" id="orig"><div class="th orig">'+(st.result?'':'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</div>Original</button>';
+  items.forEach(function(it,i){var sel=st.sel===kind+i&&!!st.result, run=st.proc&&st.proc.key===kind+i;
+    h+='<button class="tt'+(sel?' sel':'')+'" data-pick="'+kind+'" data-i="'+i+'"><div class="th">'+img(it[0],kind+'-'+i,'',it[1])+(run?'<div class="run"><div class="bar"><i></i></div></div>':'')+(sel?'<div class="chk"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>':'')+'</div>'+it[1]+'</button>';});
+  return '<div class="trow">'+h+'</div>';
+}
+var SM_THUMBS=[['img-smooth-smooth-01.jpg','Smooth'],['img-smooth-flyaways-01.jpg','Flyaways']];
+function enrichBody(){
+  if(st.tab==='Volume') return trow(VOL_THUMBS,'vol');
+  if(st.tab==='Smooth') return trow(SM_THUMBS,'sm');
+  var G=st.growth, lock=!!st.proc;
+  var chip=function(k,label,im){return '<button class="gchip'+(G.style===k?' on':'')+'" data-gs="'+k+'">'+img(im,'growth-'+k,'',label)+'<span>'+label+'</span></button>';};
+  return '<div class="grow1">'+chip('thick','Thick','img-growth-thick-01.jpg')+chip('airy','Airy','img-growth-airy-01.jpg')+
+      '<span class="gsp"></span><div class="ibtns"><button data-gm="brush" class="'+(G.mode==='brush'?'on':'')+'" aria-label="Brush">'+IC.brush+'</button><button data-gm="eraser" class="'+(G.mode==='eraser'?'on':'')+'" aria-label="Eraser">'+IC.eraser+'</button></div></div>'+
+    '<div class="grow2"><span class="dotsm"></span><input id="size" type="range" min="10" max="80" value="'+G.size+'" aria-label="Brush size"><span class="dotlg"></span>'+
+      '<button class="pbtn gen" id="gen"'+(G.drawn&&!lock?'':' disabled')+'>'+(lock?'Processing…':'Generate')+'</button></div>';
+}
+function bindBody(){
+  var b=app.querySelector('#rbody');
+  b.querySelectorAll('[data-pick]').forEach(function(c){c.onclick=function(){
+    if(st.proc)return;
+    var kind=c.dataset.pick,i=+c.dataset.i;st.sel=kind+i;
+    var res= kind==='vol'?{src:PHOTO,filter:'contrast(1.04) saturate(1.08) brightness(1.03)',label:'Volume · '+VOL_THUMBS[i][1],feature:'Hair Enrich'}
+            :kind==='sm'?{src:PHOTO,filter:'saturate(1.05) brightness(1.04) contrast(.98)',label:'Smooth · '+SM_THUMBS[i][1],feature:'Hair Enrich'}
+            :{src:RESULT_HS,filter:'',label:(kind==='cut'?'Hair Cut '+(i+1):'Hairstyle'),feature:'Hairstyle'};
+    startProc(kind+i,res);};});
+  var og=b.querySelector('#orig'); if(og) og.onclick=function(){if(st.proc)return;st.result=null;st.sel=null;render();};
+  b.querySelectorAll('[data-na]').forEach(function(c){c.onclick=function(){toast('Custom: existing flow');};});
+  b.querySelectorAll('[data-g]').forEach(function(c){c.onclick=function(){st.gender=c.dataset.g;render();};});
+  var ge=b.querySelector('#goEnrich'); if(ge) ge.onclick=function(){st.enrichNew=false;openRoom('enrich','Volume');};
+  b.querySelectorAll('[data-gs]').forEach(function(c){c.onclick=function(){st.growth.style=c.dataset.gs;render();};});
+  b.querySelectorAll('[data-gm]').forEach(function(c){c.onclick=function(){st.growth.mode=c.dataset.gm;render();};});
+  var sz=b.querySelector('#size'); if(sz) sz.oninput=function(){st.growth.size=+sz.value;};
+  b.querySelectorAll('[data-sm]').forEach(function(c){c.onclick=function(){st.smooth=c.dataset.sm;render();};});
+  var gen=b.querySelector('#gen'); if(gen) gen.onclick=function(){
+    if(gen.disabled)return;
+    if(st.tab==='Growth') startProc('growth',{src:'img-growth-result-01.jpg',filter:'',label:'Growth · '+(st.growth.style==='thick'?'Thick':'Airy'),feature:'Hair Enrich'});
+    else startProc('smooth',{src:PHOTO,filter:'saturate(1.05) brightness(1.04) contrast(.98)',label:'Smooth · '+(st.smooth==='smooth'?'Smooth':'Flyaways'),feature:'Hair Enrich'});
+  };
+}
+
+/* ===== processing (same behaviour as Hairstyle today) ===== */
+function startProc(key,res){
+  var item={id:Date.now(),status:'processing',res:res,feature:res.feature,label:res.label,exp:'Expires 11/12/2026'};
+  st.history.unshift(item);
+  var p={key:key,item:item,left:false};st.proc=p;render();
+  setTimeout(function(){
+    item.status='done';
+    if(st.proc===p){st.proc=null;st.result=res;if(key==='growth'){st.growth.drawn=false;} if(st.screen==='room')render();}
+    else if(st.screen==='history') render();
+    else toast('Your '+item.feature+' photo is ready in History');
+  },3300);
+}
+
+/* ===== Growth: tutorial + drawing ===== */
+function showGrowthTut(){
+  var strands='';[[95,18,70,16,6,0],[120,12,76,18,7,.5],[145,16,66,16,6,1]].forEach(function(a){strands+='<path d="'+strandPath.apply(null,a)+'" fill="rgba(238,61,120,.6)"/>';});
+  scrim('<div class="tut"><div class="ill">'+img(PHOTO,'edit-photo-01','','')+'<svg viewBox="0 0 248 150" preserveAspectRatio="xMidYMid slice">'+strands+'</svg></div>'+
+    '<h4>Growth</h4><p>Brush where you want more or longer hair. Pick <b>Thick</b> for fuller strands or <b>Airy</b> for light, wispy ones.</p><button class="pbtn" id="tutok">Got It</button></div>');
+  document.getElementById('tutok').onclick=function(){st.growthTutDone=true;scrim();render();};
+}
+var mask=null;
+function setupCanvas(){
+  var cv=document.getElementById('cv'),wrap=document.getElementById('pwrap'),ph=document.getElementById('rphoto');
+  function size(){var r=ph.getBoundingClientRect();var scale=r.width/ph.offsetWidth||1;cv.width=ph.offsetWidth;cv.height=ph.offsetHeight;
+    var ctx=cv.getContext('2d');if(mask&&st.growth.drawn)ctx.drawImage(mask,0,0,cv.width,cv.height);}
+  if(ph.complete)size();else ph.onload=size;
+  var ctx=cv.getContext('2d'),down=false,last=null;
+  function pos(e){var r=cv.getBoundingClientRect();return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];}
+  function stroke(a,b){var G=st.growth;
+    ctx.globalCompositeOperation=G.mode==='eraser'?'destination-out':'source-over';
+    ctx.lineCap='round';ctx.strokeStyle='rgba(238,61,120,.55)';
+    if(G.style==='thick'||G.mode==='eraser'){ctx.lineWidth=G.size*.45;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();}
+    else{ctx.lineWidth=1.4;for(var k=-2;k<=2;k++){var o=k*G.size*.07;ctx.beginPath();ctx.moveTo(a[0]+o,a[1]);ctx.lineTo(b[0]+o,b[1]);ctx.stroke();}}
+  }
+  cv.onpointerdown=function(e){down=true;last=pos(e);cv.setPointerCapture(e.pointerId);stroke(last,last);};
+  cv.onpointermove=function(e){if(!down)return;var p=pos(e);stroke(last,p);last=p;};
+  cv.onpointerup=cv.onpointercancel=function(){if(!down)return;down=false;
+    mask=document.createElement('canvas');mask.width=cv.width;mask.height=cv.height;mask.getContext('2d').drawImage(cv,0,0);
+    var was=st.growth.drawn;st.growth.drawn=st.growth.mode==='brush'||was;
+    if(!was&&st.growth.drawn){var keep=mask;renderKeep();}};
+  function renderKeep(){var y=document.getElementById('rbody').scrollTop;render();var rb=document.getElementById('rbody');if(rb)rb.scrollTop=y;}
+}
+
+/* ===== HISTORY ===== */
+function openHistory(){st.prev={screen:st.screen,room:st.room,tab:st.tab};st.screen='history';st.result=null;render();}
+function renderHistory(){
+  var items=st.history.filter(function(h){return st.histFilter==='All'||h.feature===st.histFilter;});
+  var cards=items.length?'<div class="hgrid">'+items.map(function(h){
+    return '<button class="hcard" data-h="'+h.id+'"><div class="im">'+img(h.res.src,'hist-'+h.id,'',h.label).replace('<img ','<img style="filter:'+h.res.filter+'" ')+'<span class="tag">'+h.label+'</span>'+(h.status==='processing'?'<div class="wip"><div class="ring"></div>Generating…</div>':'')+'</div><div class="ex">'+(h.status==='processing'?'Generating':h.exp)+'</div></button>';}).join('')+'</div>'
+    :'<div class="empty">No recent tasks yet.<br>Generate a look to see it here.</div>';
+  var opts=['All','Hairstyle','Hair Enrich'].map(function(o){return '<option'+(o===st.histFilter?' selected':'')+'>'+o+'</option>';}).join('');
+  app.innerHTML='<div class="screen"><div class="hhead"><button id="hb" aria-label="Back">'+IC.back+'</button><span>History</span><button id="hh" aria-label="Home">'+IC.home+'</button></div>'+
+    '<div class="htabs"><span class="on">Photo</span><span>Video</span></div>'+
+    '<div class="hbody"><div class="dd"><select id="hf" aria-label="Filter by feature">'+opts+'</select>'+IC.chev.replace('<svg','<svg style="width:14px;height:14px"')+'</div>'+
+    '<div class="info"><span>Photos will be kept for up to 30 days (some for 7 days).</span><span class="sel">Select</span></div>'+cards+'</div>'+
+    '<button class="fab" id="more">Create More</button></div>';
+  app.querySelector('#hf').onchange=function(e){st.histFilter=e.target.value;render();};
+  app.querySelector('#hb').onclick=function(){var p=st.prev;st.screen=p&&p.screen==='room'?'room':'edit';if(st.screen==='room'){st.room=p.room;st.tab=p.tab;}render();};
+  app.querySelector('#hh').onclick=app.querySelector('#more').onclick=function(){st.screen='edit';render();};
+  app.querySelectorAll('[data-h]').forEach(function(c){c.onclick=function(){var h=st.history.filter(function(x){return x.id==c.dataset.h;})[0];
+    if(h.status!=='done'){toast('Still generating…');return;}st.viewItem=h;st.screen='result';render();};});
+}
+function renderResult(){
+  var h=st.viewItem;
+  app.innerHTML='<div class="screen"><div class="hhead"><button id="rb" aria-label="Back">'+IC.back+'</button><span>'+h.feature+'</span><button id="rh" aria-label="Home">'+IC.home+'</button></div><div class="rp">'+
+   '<div class="rcard"><div class="rimg">'+img(h.res.src,'res-'+h.id,'',h.label).replace('<img ','<img style="filter:'+h.res.filter+'" ')+'</div>'+
+   '<div class="racts"><button data-na="1"><span>'+IC.dl+'</span>Save</button><button data-na="1"><span>'+IC.img+'</span>Edit Photo</button><button data-na="1"><span>'+IC.retry+'</span>Try Again</button><button data-na="1"><span>'+IC.anim+'</span>Animate</button></div></div>'+
+   '<div class="share">Share<div class="row"><div><i style="background:linear-gradient(45deg,#f9a03f,#d6249f,#285aeb)"></i>Instagram</div><div><i style="background:#111"></i>TikTok</div><div><i style="background:#25d366"></i>WhatsApp</div><div><i style="background:#1877f2"></i>Facebook</div><div><i style="background:#e5e5e8"></i>Other</div></div></div>'+
+   '</div></div>';
+  app.querySelector('#rb').onclick=function(){st.screen='history';render();};
+  app.querySelector('#rh').onclick=function(){st.screen='edit';render();};
+  app.querySelectorAll('[data-na]').forEach(function(b){b.onclick=function(){toast('Existing result-page action');};});
+}
+
+function render(){
+  if(st.screen==='edit')renderEdit();
+  else if(st.screen==='room')renderRoom();
+  else if(st.screen==='history')renderHistory();
+  else renderResult();
+}
+render();
+
+/* ===== mobile scale (pf-app-prototype §2.3) ===== */
+(function(){
+  var MOBILE_MAX=480,DESIGN_W=320,root=document.documentElement;
+  var cs=getComputedStyle(root);
+  var probe=document.createElement('div');
+  probe.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)';
+  document.body.appendChild(probe);
+  var pcs=getComputedStyle(probe);
+  var BASE_SAFE_TOP=parseFloat(pcs.paddingTop)||0;
+  var BASE_SAFE_BOT=parseFloat(pcs.paddingBottom)||0;
+  probe.remove();
+  function applyMobileScale(){
+    var frame=document.querySelector('.phone-frame'); if(!frame)return;
+    if(window.innerWidth>MOBILE_MAX){frame.style.transform='';root.style.removeProperty('--mob-scale');root.style.removeProperty('--safe-top');root.style.removeProperty('--safe-bot');return;}
+    var scale=window.innerWidth/DESIGN_W;
+    frame.style.transformOrigin='top left';frame.style.transform='scale('+scale+')';
+    root.style.setProperty('--mob-scale',scale);
+    root.style.setProperty('--safe-top',(BASE_SAFE_TOP/scale)+'px');
+    root.style.setProperty('--safe-bot',(BASE_SAFE_BOT/scale)+'px');
+  }
+  applyMobileScale();
+  window.addEventListener('resize',applyMobileScale);
+  window.addEventListener('orientationchange',applyMobileScale);
+})();
+</script>
+</body>
+</html>
